@@ -1,0 +1,53 @@
+@inherits LayoutComponentBase
+@inject IJSRuntime JSRuntime;
+
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <div id="mainView" class="main">
+        
+        <div class="top-row px-4">
+            <a href="http://blazor.net" target="_blank" class="ml-md-auto">About</a>
+        </div>
+
+        <div @ref="contentRef" class="content px-4 overflow-auto">
+            @Body
+        </div>
+
+        @*<div id="footerView" class="footer-row">
+            <h4>Footer... </h4>
+        </div>*@
+    </div>
+</div>
+
+@code {
+    private string contentStyle;
+    private double mainHeight, footerHeight;
+
+    private ElementReference contentRef;
+
+    protected override async void OnAfterRender(bool firstRender)
+    {
+        @* var height = await JSRuntime.InvokeAsync<double>("getHeight", new object[] { "#mainView" });
+        var heightFoot = await JSRuntime.InvokeAsync<double>("getHeight", new object[] { "#footerView" });
+
+        if (height != default)
+            mainHeight = height;
+
+        if (heightFoot != default)
+            footerHeight = heightFoot;
+
+        var contentHeight = mainHeight - footerHeight;
+
+        //contentStyle = $"height:{contentHeight}px";
+
+        await JSRuntime.InvokeVoidAsync("setHeight", contentRef, contentHeight); *@
+
+        @* if (height != null && height is double dbl)
+        {
+            mainHeight = dbl;
+        } *@
+    }
+}

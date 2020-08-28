@@ -1,0 +1,105 @@
+@page "/report"
+
+@using ReportViewerWebsite.Data
+@using ValueType = Syncfusion.Blazor.Charts.ValueType
+@inject IReportService ReportService
+
+
+
+@if (dataItems == null)
+{
+	<h1>Report</h1>
+	<p><em>Loading...</em></p>
+}
+else
+{
+    <div style="z-index:0">
+        <h1>Report</h1>
+
+    <SfUploader @ref="uploader" AutoUpload="false" Multiple="false">
+        <UploaderButtonsProps Browse="Select Report" Upload="Upload Report"></UploaderButtonsProps>
+        <UploaderEvents ValueChange="OnChange"></UploaderEvents>
+    </SfUploader>
+
+    <div style="min-height:25vh">
+	<SfChart @ref="reportChart" Title="Paving Report" Width="100%">
+        
+            <ChartPrimaryXAxis ValueType="ValueType.Double" Interval="10" Minimum="0" Maximum="100">
+                <ChartAxisMajorGridLines Width="1"></ChartAxisMajorGridLines>
+            </ChartPrimaryXAxis>
+
+            <ChartAxes>
+                <ChartAxis Name="YTemperature"
+                           LabelFormat="{value}°C"
+                           ValueType="ValueType.Double">
+
+                </ChartAxis>
+                <ChartAxis Name="YSpeed"
+                           LabelFormat="{value} m/m"
+                           ValueType="ValueType.Double"
+                           OpposedPosition="true"
+                           Minimum="0"
+                           Maximum="10">
+
+                </ChartAxis>
+            </ChartAxes>
+
+            <ChartCrosshairSettings Enable="true" LineType="LineType.Vertical"></ChartCrosshairSettings>
+
+            <ChartTooltipSettings Enable="true" Shared="true" Format="${point.y}"></ChartTooltipSettings>
+
+            <ChartSeriesCollection>
+                <ChartSeries DataSource="@dataItems" Name="Temperature" YAxisName="YTemperature" XName="Chainage" YName="Temperature" Type="ChartSeriesType.Spline">
+                    <ChartMarker Visible="true" Width="8" Height="8"></ChartMarker>
+                </ChartSeries>
+
+                <ChartSeries DataSource="@dataItems" Name="Speed" YAxisName="YSpeed" XName="Chainage" YName="Speed" Type="ChartSeriesType.Spline">
+                    <ChartMarker Visible="true" Width="8" Height="8"></ChartMarker>
+                </ChartSeries>
+            </ChartSeriesCollection>
+        </SfChart>
+    </div>
+
+    <div class="col-12 offset-0 col-sm-12 offset-sm-0 col-md-8 offset-md-2">
+        
+        <SfGrid DataSource="@dataItems" Width="100%">
+            <GridColumns>
+                <GridColumn Field=@nameof(ReportEntry.Chainage) HeaderText="Chainage" TextAlign="TextAlign.Center" Width="33%"></GridColumn>
+                <GridColumn Field=@nameof(ReportEntry.Temperature) HeaderText="Temperature" TextAlign="TextAlign.Center" Width="33%"></GridColumn>
+                <GridColumn Field=@nameof(ReportEntry.Speed) HeaderText="Speed" TextAlign="TextAlign.Center" Type="ColumnType.Number" Format="N1" Width="33%"></GridColumn>
+            </GridColumns>
+        </SfGrid>
+    </div>
+    </div>
+   
+    <style>
+        .e-chart {
+            height: inherit;
+        }
+
+    </style>
+
+}
+
+@code {
+	private ReportEntry[] dataItems;
+	private SfChart reportChart;
+    private SfUploader uploader;
+    //private ElementReference emptyChart;
+
+	private void OnChange(UploadChangeEventArgs args)
+	{
+        var file = args.Files.FirstOrDefault();
+		if (file != null)
+		{
+			dataItems = ReportService.Generate().ToArray();
+			uploader.ClearAll();           
+		}
+	}
+
+	protected override Task OnInitializedAsync()
+	{
+		dataItems = ReportService.Generate().ToArray();
+		return Task.CompletedTask;
+	}
+}
