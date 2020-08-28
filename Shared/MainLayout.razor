@@ -28,7 +28,7 @@
 
     private ElementReference contentRef;
 
-    protected override async void OnAfterRender(bool firstRender)
+    protected override void OnAfterRender(bool firstRender)
     {
         @* var height = await JSRuntime.InvokeAsync<double>("getHeight", new object[] { "#mainView" });
         var heightFoot = await JSRuntime.InvokeAsync<double>("getHeight", new object[] { "#footerView" });
