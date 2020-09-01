@@ -3,8 +3,8 @@
 @using ReportViewerWebsite.Data
 @using ValueType = Syncfusion.Blazor.Charts.ValueType
 @inject IReportService ReportService
-
-
+@inject HttpClient Http
+@inject NavigationManager NavManager
 
 @if (dataItems == null)
 {
@@ -21,46 +21,46 @@ else
         <UploaderEvents ValueChange="OnChange"></UploaderEvents>
     </SfUploader>
 
-    <div style="min-height:25vh">
-	<SfChart @ref="reportChart" Title="Paving Report" Width="100%">
-        <ChartEvents Loaded="@OnChartLoaded" OnScrollEnd="@ScrollEndHandler"></ChartEvents>
+    <div id="chartContainer" style="min-height:25vh">
+		<SfChart @ref="reportChart" Title="Paving Report" Width="100%">
+			<ChartEvents Loaded="@OnChartLoaded" OnScrollEnd="@ScrollEndHandler" OnAnimationComplete="@AnimationHandler"></ChartEvents>
 
-        <ChartPrimaryXAxis ValueType="ValueType.Double" 
-						   Interval="10" 
-						   Minimum="@minChainage" 
-						   Maximum="@maxChainage" 
-						   EnableScrollbarOnZooming="true">
-			@* <ChartAxisScrollbarSettings></ChartAxisScrollbarSettings> *@
-            <ChartAxisMajorGridLines Width="1"></ChartAxisMajorGridLines>
-        </ChartPrimaryXAxis>
+			<ChartPrimaryXAxis ValueType="ValueType.Double" 
+							   Interval="10" 
+							   Minimum="@minChainage" 
+							   Maximum="@maxChainage" 
+							   EnableScrollbarOnZooming="true">
+				@* <ChartAxisScrollbarSettings></ChartAxisScrollbarSettings> *@
+				<ChartAxisMajorGridLines Width="1"></ChartAxisMajorGridLines>
+			</ChartPrimaryXAxis>
 
-        <ChartAxes>
-            <ChartAxis Name="YTemperature"                           
-					   LabelFormat="{value}°C"                           
-					   ValueType="ValueType.Double">
+			<ChartAxes>
+				<ChartAxis Name="YTemperature"                           
+						   LabelFormat="{value}°C"                           
+						   ValueType="ValueType.Double">
 
-            </ChartAxis>
-            <ChartAxis Name="YSpeed"
-                       LabelFormat="{value} m/m"					                              
-					   ValueType="ValueType.Double"                           
-					   OpposedPosition="true"                           
-					   Minimum="0"                           
-					   Maximum="10">
+				</ChartAxis>
+				<ChartAxis Name="YSpeed"
+						   LabelFormat="{value} m/m"					                              
+						   ValueType="ValueType.Double"                           
+						   OpposedPosition="true"                           
+						   Minimum="0"                           
+						   Maximum="10">
 
-            </ChartAxis>
-        </ChartAxes>
+				</ChartAxis>
+			</ChartAxes>
 
-        <ChartCrosshairSettings Enable="true" LineType="LineType.Vertical"></ChartCrosshairSettings>
+			<ChartCrosshairSettings Enable="true" LineType="LineType.Vertical"></ChartCrosshairSettings>
 
-        <ChartTooltipSettings Enable="true" Shared="true" Format="${point.y}"></ChartTooltipSettings>
+			<ChartTooltipSettings Enable="true" Shared="true" Format="${point.y}"></ChartTooltipSettings>
 
-        <ChartZoomSettings EnablePan="true"
-						   EnableMouseWheelZooming="false"
-						   EnablePinchZooming="false"
-						   EnableScrollbar="true"
-						   EnableSelectionZooming="false"
-						   Mode="ZoomMode.X">
-		</ChartZoomSettings>
+			<ChartZoomSettings EnablePan="true"
+							   EnableMouseWheelZooming="false"
+							   EnablePinchZooming="false"
+							   EnableScrollbar="true"
+							   EnableSelectionZooming="false"
+							   Mode="ZoomMode.X">
+			</ChartZoomSettings>
 
             <ChartSeriesCollection>
                 <ChartSeries DataSource="@dataItems" Name="Temperature" YAxisName="YTemperature" XName="Chainage" YName="Temperature" Type="ChartSeriesType.Spline">
@@ -76,7 +76,7 @@ else
 
     <div class="col-12 offset-0 col-sm-12 offset-sm-0 col-md-8 offset-md-2">
         
-        <SfGrid DataSource="@dataItems" Width="100%">
+        <SfGrid @ref="@reportGrid" DataSource="@dataItems" Width="100%" RowHeight="35">
             <GridColumns>
                 <GridColumn Field=@nameof(ReportEntry.Chainage) HeaderText="Chainage" TextAlign="TextAlign.Center" Width="33%"></GridColumn>
                 <GridColumn Field=@nameof(ReportEntry.Temperature) HeaderText="Temperature" TextAlign="TextAlign.Center" Width="33%"></GridColumn>
@@ -84,6 +84,7 @@ else
             </GridColumns>
         </SfGrid>
     </div>
+
     </div>
    
     <style>
@@ -99,6 +100,8 @@ else
 	private ReportEntry[] dataItems;
 	private SfChart reportChart;
     private SfUploader uploader;
+	private SfGrid<ReportEntry> reportGrid;
+
     //private ElementReference emptyChart;
 
 	private double minChainage, maxChainage;
@@ -113,6 +116,13 @@ else
 			args.Chart.PrimaryXAxis.ZoomPosition = 0;
 		} *@
     }
+
+	public void AnimationHandler(IAnimationCompleteEventArgs args)
+    {
+        // Here you can customize your code
+		
+    }
+
  	public void ScrollEndHandler(IScrollEventArgs args)	
 	{
 		
@@ -141,15 +151,25 @@ else
 			reportChart.PrimaryXAxis.ZoomFactor = ratio;
 		}
 
+		if (firstRender)
+		{
+			var rowHeight = reportGrid.RowHeight;
+			reportGrid.Height = $"{12 * rowHeight}px";
+		}
+
 		return Task.CompletedTask;
 	}
 
 	protected override Task OnInitializedAsync()
 	{
-		dataItems = ReportService.Generate().ToArray();
+		dataItems = new ReportEntry[0];
+
+		/*dataItems = ReportService.Generate().ToArray();
 		maxChainage = dataItems.Max(i => i.Chainage);
 		minChainage = dataItems.Min(i => i.Chainage);
-		updatedZoom = true;
+		updatedZoom = true;*/
+
+		var uri = NavManager.ToAbsoluteUri(NavManager.Uri);
 
 		return Task.CompletedTask;
 	}
